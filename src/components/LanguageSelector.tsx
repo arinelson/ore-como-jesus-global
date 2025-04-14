@@ -8,7 +8,8 @@ import {
   DropdownMenuItem, 
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
-import { languages, saveLanguage } from "@/utils/i18n";
+import { languages } from "@/utils/i18n";
+import { saveLanguage } from "@/utils/storage";
 
 interface LanguageSelectorProps {
   currentLang: string;
