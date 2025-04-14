@@ -72,7 +72,7 @@ const parseGeminiResponse = async (response: any, contentType: ContentType): Pro
   return result;
 }
 
-export const generateContent = async (
+const generateContent = async (
   context: string,
   contentType: ContentType,
   languageCode: string,
@@ -86,7 +86,8 @@ export const generateContent = async (
     }
 
     const prompt = createPrompt(context, contentType, languageCode, prayerSize);
-    
+    console.log('Generated prompt:', prompt);
+
     const response = await fetch(`${API_URL}?key=${GEMINI_API_KEY}`, {
       method: 'POST',
       headers: {
@@ -126,10 +127,14 @@ export const generateContent = async (
     });
 
     if (!response.ok) {
+      const errorData = await response.json();
+      console.error('API error response:', errorData);
       throw new Error(`API request failed: ${response.statusText}`);
     }
 
     const data = await response.json();
+    console.log('API response:', data);
+    
     return await parseGeminiResponse(data, contentType);
 
   } catch (error) {
@@ -150,3 +155,5 @@ export const generateContent = async (
     }
   }
 };
+
+export { generateContent };
