@@ -62,7 +62,7 @@ export const hasReachedDailyLimit = (): boolean => {
   checkAndResetDailyLimit();
   const usageCount = parseInt(localStorage.getItem(USAGE_COUNT_KEY) || '0', 10);
   // MAXIMUM_DAILY_USAGE can be adjusted as needed - currently set to 3
-  return usageCount >= 3;
+  return usageCount >= 10;
 };
 
 // Get remaining daily usages
@@ -70,7 +70,7 @@ export const getRemainingUsages = (): number => {
   checkAndResetDailyLimit();
   const usageCount = parseInt(localStorage.getItem(USAGE_COUNT_KEY) || '0', 10);
   // MAXIMUM_DAILY_USAGE can be adjusted as needed - currently set to 3
-  return Math.max(0, 3 - usageCount);
+  return Math.max(0, 10 - usageCount);
 };
 
 // Increment usage count
