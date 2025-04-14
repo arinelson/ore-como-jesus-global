@@ -37,6 +37,11 @@ export const translations: Record<string, Translations> = {
     limitReachedMessage: 'You have reached the daily limit of 3 generations.',
     remainingTitle: 'Remaining today:',
     limitReachedTitle: 'Daily limit reached',
+    // New prayer size translations
+    prayerSizeLabel: 'Prayer Length',
+    smallPrayer: 'Short',
+    mediumPrayer: 'Medium',
+    largePrayer: 'Long'
   },
   pt: {
     siteTitle: 'Ore Como Jesus',
@@ -58,6 +63,11 @@ export const translations: Record<string, Translations> = {
     limitReachedMessage: 'Você atingiu o limite diário de 3 gerações.',
     remainingTitle: 'Restantes hoje:',
     limitReachedTitle: 'Limite diário atingido',
+    // New prayer size translations
+    prayerSizeLabel: 'Tamanho da Oração',
+    smallPrayer: 'Curta',
+    mediumPrayer: 'Média',
+    largePrayer: 'Longa'
   },
   es: {
     siteTitle: 'Ora Como Jesús',
@@ -79,6 +89,11 @@ export const translations: Record<string, Translations> = {
     limitReachedMessage: 'Has alcanzado el límite diario de 3 generaciones.',
     remainingTitle: 'Restantes hoy:',
     limitReachedTitle: 'Límite diario alcanzado',
+    // New prayer size translations
+    prayerSizeLabel: 'Longitud de Oración',
+    smallPrayer: 'Corta',
+    mediumPrayer: 'Media',
+    largePrayer: 'Larga'
   },
   fr: {
     siteTitle: 'Priez Comme Jésus',
@@ -100,6 +115,11 @@ export const translations: Record<string, Translations> = {
     limitReachedMessage: 'Vous avez atteint la limite quotidienne de 3 générations.',
     remainingTitle: 'Restants aujourd\'hui:',
     limitReachedTitle: 'Limite quotidienne atteinte',
+    // New prayer size translations
+    prayerSizeLabel: 'Longueur de Prière',
+    smallPrayer: 'Courte',
+    mediumPrayer: 'Moyenne',
+    largePrayer: 'Longue'
   },
   it: {
     siteTitle: 'Prega Come Gesù',
@@ -121,6 +141,11 @@ export const translations: Record<string, Translations> = {
     limitReachedMessage: 'Hai raggiunto il limite giornaliero di 3 generazioni.',
     remainingTitle: 'Rimanenti oggi:',
     limitReachedTitle: 'Limite giornaliero raggiunto',
+    // New prayer size translations
+    prayerSizeLabel: 'Lunghezza della Preghiera',
+    smallPrayer: 'Breve',
+    mediumPrayer: 'Media',
+    largePrayer: 'Lunga'
   },
   de: {
     siteTitle: 'Bete Wie Jesus',
@@ -142,6 +167,11 @@ export const translations: Record<string, Translations> = {
     limitReachedMessage: 'Du hast das Tageslimit von 3 Generationen erreicht.',
     remainingTitle: 'Heute noch übrig:',
     limitReachedTitle: 'Tageslimit erreicht',
+    // New prayer size translations
+    prayerSizeLabel: 'Gebetslänge',
+    smallPrayer: 'Kurz',
+    mediumPrayer: 'Mittel',
+    largePrayer: 'Lang'
   },
   fil: {
     siteTitle: 'Manalangin Tulad ni Hesus',
@@ -163,6 +193,11 @@ export const translations: Record<string, Translations> = {
     limitReachedMessage: 'Naabot mo na ang araw-araw na limitasyon ng 3 na paggawa.',
     remainingTitle: 'Natitira ngayong araw:',
     limitReachedTitle: 'Naabot na ang araw-araw na limitasyon',
+    // New prayer size translations
+    prayerSizeLabel: 'Haba ng Panalangin',
+    smallPrayer: 'Maikli',
+    mediumPrayer: 'Katamtaman',
+    largePrayer: 'Mahaba'
   },
   id: {
     siteTitle: 'Berdoa Seperti Yesus',
@@ -184,6 +219,11 @@ export const translations: Record<string, Translations> = {
     limitReachedMessage: 'Anda telah mencapai batas harian 3 generasi.',
     remainingTitle: 'Tersisa hari ini:',
     limitReachedTitle: 'Batas harian tercapai',
+    // New prayer size translations
+    prayerSizeLabel: 'Panjang Doa',
+    smallPrayer: 'Pendek',
+    mediumPrayer: 'Sedang',
+    largePrayer: 'Panjang'
   },
   zh: {
     siteTitle: '像耶稣一样祷告',
@@ -205,6 +245,11 @@ export const translations: Record<string, Translations> = {
     limitReachedMessage: '您已达到每天3次生成的限制。',
     remainingTitle: '今天剩余：',
     limitReachedTitle: '已达到每日限制',
+    // New prayer size translations
+    prayerSizeLabel: '祷告长度',
+    smallPrayer: '短',
+    mediumPrayer: '中',
+    largePrayer: '长'
   },
   ja: {
     siteTitle: 'イエスのように祈る',
@@ -226,6 +271,11 @@ export const translations: Record<string, Translations> = {
     limitReachedMessage: '1日3回の生成制限に達しました。',
     remainingTitle: '今日の残り：',
     limitReachedTitle: '1日の制限に達しました',
+    // New prayer size translations
+    prayerSizeLabel: '祈りの長さ',
+    smallPrayer: '短い',
+    mediumPrayer: '中程度',
+    largePrayer: '長い'
   },
   ru: {
     siteTitle: 'Молись Как Иисус',
@@ -247,6 +297,11 @@ export const translations: Record<string, Translations> = {
     limitReachedMessage: 'Вы достигли дневного лимита в 3 генерации.',
     remainingTitle: 'Осталось сегодня:',
     limitReachedTitle: 'Достигнут дневной лимит',
+    // New prayer size translations
+    prayerSizeLabel: 'Длина молитвы',
+    smallPrayer: 'Короткая',
+    mediumPrayer: 'Средняя',
+    largePrayer: 'Длинная'
   },
   no: {
     siteTitle: 'Be Som Jesus',
@@ -268,6 +323,11 @@ export const translations: Record<string, Translations> = {
     limitReachedMessage: 'Du har nådd den daglige grensen på 3 genereringer.',
     remainingTitle: 'Gjenstående i dag:',
     limitReachedTitle: 'Daglig grense nådd',
+    // New prayer size translations
+    prayerSizeLabel: 'Bønnelengde',
+    smallPrayer: 'Kort',
+    mediumPrayer: 'Middels',
+    largePrayer: 'Lang'
   },
 };
 

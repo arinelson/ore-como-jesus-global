@@ -1,3 +1,4 @@
+
 export type ContextOption = {
   id: string;
   label: string;
@@ -45,4 +46,9 @@ export type Translations = {
   limitReachedMessage: string;
   remainingTitle: string;
   limitReachedTitle: string;
+  // New translation properties for prayer size
+  prayerSizeLabel: string;
+  smallPrayer: string;
+  mediumPrayer: string;
+  largePrayer: string;
 };
