@@ -1,18 +1,16 @@
-
 import { ContentType, PrayerSize } from "@/types";
 
 const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
-const API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent";
+const MODEL_NAME = "gemini-2.0-flash-thinking-exp-01-21";
+const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL_NAME}:generateContent`;
 
 const createPrompt = (context: string, contentType: ContentType, languageCode: string, prayerSize?: PrayerSize): string => {
-  // Define word counts for different prayer sizes
   const prayerSizes = {
     small: { min: 50, max: 100 },
     medium: { min: 100, max: 200 },
     large: { min: 200, max: 300 }
   };
 
-  // Base prompts for different content types
   const prompts = {
     prayer: {
       pt: (size?: PrayerSize) => {
@@ -35,7 +33,6 @@ const createPrompt = (context: string, contentType: ContentType, languageCode: s
     }
   };
 
-  // Default to English if language not supported
   const lang = (languageCode in prompts.prayer) ? languageCode : 'en';
   
   if (contentType === 'prayer') {
@@ -46,7 +43,7 @@ const createPrompt = (context: string, contentType: ContentType, languageCode: s
     return `${prompts.prayer[lang](prayerSize)} ${prompts.verses[lang]}`;
   }
   
-  return prompts.prayer[lang](prayerSize); // Default to prayer if invalid type
+  return prompts.prayer[lang](prayerSize);
 };
 
 const parseGeminiResponse = async (response: any, contentType: ContentType): Promise<{ prayer?: string; verses?: { text: string; reference: string }[] }> => {
@@ -54,7 +51,6 @@ const parseGeminiResponse = async (response: any, contentType: ContentType): Pro
   const result: { prayer?: string; verses?: { text: string; reference: string }[] } = {};
 
   if (contentType === 'prayer' || contentType === 'both') {
-    // Extract prayer (everything before the verses if contentType is 'both')
     const prayerText = contentType === 'both' ? 
       text.split(/Versículos:|Verses:|Versículos:/)[0].trim() :
       text.trim();
@@ -62,7 +58,6 @@ const parseGeminiResponse = async (response: any, contentType: ContentType): Pro
   }
 
   if (contentType === 'verses' || contentType === 'both') {
-    // Extract verses with references
     const versesSection = contentType === 'both' ? 
       text.split(/Versículos:|Verses:|Versículos:/)[1] || text :
       text;
@@ -83,7 +78,7 @@ export const generateContent = async (
   languageCode: string,
   prayerSize?: PrayerSize
 ): Promise<{ prayer?: string; verses?: { text: string; reference: string }[] }> => {
-  console.log(`Generating content for context: ${context}, type: ${contentType}, language: ${languageCode}, prayer size: ${prayerSize}`);
+  console.log(`Generating content with model ${MODEL_NAME} for context: ${context}, type: ${contentType}, language: ${languageCode}, prayer size: ${prayerSize}`);
 
   try {
     if (!GEMINI_API_KEY) {
@@ -140,7 +135,6 @@ export const generateContent = async (
   } catch (error) {
     console.error('Error generating content:', error);
     
-    // Return fallback content in case of error
     if (languageCode === 'pt') {
       return contentType === 'verses' ? 
         { verses: [{ text: "O Senhor é o meu pastor; nada me faltará.", reference: "Salmos 23:1" }] } :
