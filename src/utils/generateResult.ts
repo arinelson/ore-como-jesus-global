@@ -1,16 +1,32 @@
 
-import { ContentType } from "@/types";
+import { ContentType, PrayerSize } from "@/types";
 
 const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
 const API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent";
 
-const createPrompt = (context: string, contentType: ContentType, languageCode: string): string => {
+const createPrompt = (context: string, contentType: ContentType, languageCode: string, prayerSize?: PrayerSize): string => {
+  // Define word counts for different prayer sizes
+  const prayerSizes = {
+    small: { min: 50, max: 100 },
+    medium: { min: 100, max: 200 },
+    large: { min: 200, max: 300 }
+  };
+
   // Base prompts for different content types
   const prompts = {
     prayer: {
-      pt: `Crie uma oração cristã sincera, acolhedora e empática sobre "${context}". A oração deve ser em primeira pessoa, como se a pessoa estivesse orando, e deve ter entre 100-150 palavras. Use linguagem respeitosa e bíblica.`,
-      es: `Crea una oración cristiana sincera, acogedora y empática sobre "${context}". La oración debe estar en primera persona, como si la persona estuviera orando, y debe tener entre 100-150 palabras. Usa un lenguaje respetuoso y bíblico.`,
-      en: `Create a sincere, welcoming, and empathetic Christian prayer about "${context}". The prayer should be in first person, as if the person is praying, and should be between 100-150 words. Use respectful and biblical language.`
+      pt: (size?: PrayerSize) => {
+        const wordCount = size ? `entre ${prayerSizes[size].min}-${prayerSizes[size].max} palavras` : '100-150 palavras';
+        return `Crie uma oração cristã sincera, acolhedora e empática sobre "${context}". A oração deve ser em primeira pessoa, como se a pessoa estivesse orando, e deve ter ${wordCount}. Use linguagem respeitosa e bíblica.`;
+      },
+      es: (size?: PrayerSize) => {
+        const wordCount = size ? `entre ${prayerSizes[size].min}-${prayerSizes[size].max} palabras` : '100-150 palabras';
+        return `Crea una oración cristiana sincera, acogedora y empática sobre "${context}". La oración debe estar en primera persona, como si la persona estuviera orando, y debe tener ${wordCount}. Usa un lenguaje respetuoso y bíblico.`;
+      },
+      en: (size?: PrayerSize) => {
+        const wordCount = size ? `between ${prayerSizes[size].min}-${prayerSizes[size].max} words` : '100-150 words';
+        return `Create a sincere, welcoming, and empathetic Christian prayer about "${context}". The prayer should be in first person, as if the person is praying, and should be ${wordCount}. Use respectful and biblical language.`;
+      }
     },
     verses: {
       pt: `Selecione 3 versículos bíblicos relevantes e consoladores relacionados a "${context}". Forneça o texto completo e a referência de cada versículo.`,
@@ -22,10 +38,15 @@ const createPrompt = (context: string, contentType: ContentType, languageCode: s
   // Default to English if language not supported
   const lang = (languageCode in prompts.prayer) ? languageCode : 'en';
   
-  if (contentType === 'both') {
-    return `${prompts.prayer[lang]} ${prompts.verses[lang]}`;
+  if (contentType === 'prayer') {
+    return prompts.prayer[lang](prayerSize);
+  } else if (contentType === 'verses') {
+    return prompts[contentType][lang];
+  } else if (contentType === 'both') {
+    return `${prompts.prayer[lang](prayerSize)} ${prompts.verses[lang]}`;
   }
-  return prompts[contentType][lang];
+  
+  return prompts.prayer[lang](prayerSize); // Default to prayer if invalid type
 };
 
 const parseGeminiResponse = async (response: any, contentType: ContentType): Promise<{ prayer?: string; verses?: { text: string; reference: string }[] }> => {
@@ -59,16 +80,17 @@ const parseGeminiResponse = async (response: any, contentType: ContentType): Pro
 export const generateContent = async (
   context: string,
   contentType: ContentType,
-  languageCode: string
+  languageCode: string,
+  prayerSize?: PrayerSize
 ): Promise<{ prayer?: string; verses?: { text: string; reference: string }[] }> => {
-  console.log(`Generating content for context: ${context}, type: ${contentType}, language: ${languageCode}`);
+  console.log(`Generating content for context: ${context}, type: ${contentType}, language: ${languageCode}, prayer size: ${prayerSize}`);
 
   try {
     if (!GEMINI_API_KEY) {
       throw new Error('VITE_GEMINI_API_KEY environment variable is not set');
     }
 
-    const prompt = createPrompt(context, contentType, languageCode);
+    const prompt = createPrompt(context, contentType, languageCode, prayerSize);
     
     const response = await fetch(`${API_URL}?key=${GEMINI_API_KEY}`, {
       method: 'POST',
@@ -120,54 +142,17 @@ export const generateContent = async (
     
     // Return fallback content in case of error
     if (languageCode === 'pt') {
-      return {
-        prayer: `Senhor, pedimos sua orientação neste momento de ${context}. Por favor, nos ajude e nos fortaleça. Amém.`,
-        verses: [{ text: "O Senhor é o meu pastor; nada me faltará.", reference: "Salmos 23:1" }]
-      };
+      return contentType === 'verses' ? 
+        { verses: [{ text: "O Senhor é o meu pastor; nada me faltará.", reference: "Salmos 23:1" }] } :
+        { prayer: `Senhor, pedimos sua orientação neste momento de ${context}. Por favor, nos ajude e nos fortaleça. Amém.` };
     } else if (languageCode === 'es') {
-      return {
-        prayer: `Señor, pedimos tu guía en este momento de ${context}. Por favor, ayúdanos y fortalécenos. Amén.`,
-        verses: [{ text: "El Señor es mi pastor; nada me faltará.", reference: "Salmos 23:1" }]
-      };
+      return contentType === 'verses' ?
+        { verses: [{ text: "El Señor es mi pastor; nada me faltará.", reference: "Salmos 23:1" }] } :
+        { prayer: `Señor, pedimos tu guía en este momento de ${context}. Por favor, ayúdanos y fortalécenos. Amén.` };
     } else {
-      return {
-        prayer: `Lord, we ask for your guidance in this moment of ${context}. Please help us and strengthen us. Amen.`,
-        verses: [{ text: "The Lord is my shepherd; I shall not want.", reference: "Psalm 23:1" }]
-      };
+      return contentType === 'verses' ?
+        { verses: [{ text: "The Lord is my shepherd; I shall not want.", reference: "Psalm 23:1" }] } :
+        { prayer: `Lord, we ask for your guidance in this moment of ${context}. Please help us and strengthen us. Amen.` };
     }
   }
 };
-
-// Comentários para implementações futuras:
-
-/*
-IMPLEMENTAÇÃO PREMIUM:
-1. Para adicionar funcionalidades premium, você pode:
-   - Adicionar um parâmetro 'isPremium' na função generateContent
-   - Criar diferentes limites de versículos (3 para free, 5+ para premium)
-   - Adicionar opções especiais de conteúdo (por exemplo, devocionais)
-   Exemplo:
-   ```
-   if (isPremium) {
-     // Gerar conteúdo premium com mais versículos
-     // Adicionar conteúdo devocional
-     // Permitir personalização avançada
-   }
-   ```
-
-ADICIONAR NOVOS CONTEXTOS:
-1. Os contextos são gerenciados no arquivo i18n.ts
-2. Para adicionar novos contextos, basta expandir o array de opções lá
-3. O sistema de prompts já está preparado para lidar com qualquer contexto
-
-LOGS PARA DEBUGGING:
-1. Logs importantes já estão implementados para:
-   - Início da geração de conteúdo
-   - Erros na API
-   - Respostas da API
-2. Para adicionar mais logs, você pode:
-   - Monitorar tempo de resposta
-   - Registrar escolhas do usuário
-   - Rastrear falhas específicas
-*/
-

@@ -1,4 +1,3 @@
-
 export type ContextOption = {
   id: string;
   label: string;
@@ -6,6 +5,7 @@ export type ContextOption = {
 };
 
 export type ContentType = 'prayer' | 'verses' | 'both';
+export type PrayerSize = 'small' | 'medium' | 'large';
 
 export type Language = {
   code: string;
@@ -21,6 +21,7 @@ export type PrayerResult = {
   }[];
   context: string;
   contentType: ContentType;
+  prayerSize?: PrayerSize;
   timestamp: number;
 };
 
