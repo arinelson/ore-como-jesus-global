@@ -1,63 +1,173 @@
 
 import { ContentType } from "@/types";
 
-// In a real implementation, this would call the AI service
-// For now, we'll simulate the API call
+const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
+const API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent";
+
+const createPrompt = (context: string, contentType: ContentType, languageCode: string): string => {
+  // Base prompts for different content types
+  const prompts = {
+    prayer: {
+      pt: `Crie uma oração cristã sincera, acolhedora e empática sobre "${context}". A oração deve ser em primeira pessoa, como se a pessoa estivesse orando, e deve ter entre 100-150 palavras. Use linguagem respeitosa e bíblica.`,
+      es: `Crea una oración cristiana sincera, acogedora y empática sobre "${context}". La oración debe estar en primera persona, como si la persona estuviera orando, y debe tener entre 100-150 palabras. Usa un lenguaje respetuoso y bíblico.`,
+      en: `Create a sincere, welcoming, and empathetic Christian prayer about "${context}". The prayer should be in first person, as if the person is praying, and should be between 100-150 words. Use respectful and biblical language.`
+    },
+    verses: {
+      pt: `Selecione 3 versículos bíblicos relevantes e consoladores relacionados a "${context}". Forneça o texto completo e a referência de cada versículo.`,
+      es: `Selecciona 3 versículos bíblicos relevantes y reconfortantes relacionados con "${context}". Proporciona el texto completo y la referencia de cada versículo.`,
+      en: `Select 3 relevant and comforting Bible verses related to "${context}". Provide the full text and reference for each verse.`
+    }
+  };
+
+  // Default to English if language not supported
+  const lang = (languageCode in prompts.prayer) ? languageCode : 'en';
+  
+  if (contentType === 'both') {
+    return `${prompts.prayer[lang]} ${prompts.verses[lang]}`;
+  }
+  return prompts[contentType][lang];
+};
+
+const parseGeminiResponse = async (response: any, contentType: ContentType): Promise<{ prayer?: string; verses?: { text: string; reference: string }[] }> => {
+  const text = response.candidates[0]?.content?.parts?.[0]?.text || '';
+  const result: { prayer?: string; verses?: { text: string; reference: string }[] } = {};
+
+  if (contentType === 'prayer' || contentType === 'both') {
+    // Extract prayer (everything before the verses if contentType is 'both')
+    const prayerText = contentType === 'both' ? 
+      text.split(/Versículos:|Verses:|Versículos:/)[0].trim() :
+      text.trim();
+    result.prayer = prayerText;
+  }
+
+  if (contentType === 'verses' || contentType === 'both') {
+    // Extract verses with references
+    const versesSection = contentType === 'both' ? 
+      text.split(/Versículos:|Verses:|Versículos:/)[1] || text :
+      text;
+    
+    const verses = versesSection.match(/[""]([^""]+)[""] - ([^"\n]+)/g) || [];
+    result.verses = verses.map(verse => {
+      const [, text, reference] = verse.match(/[""]([^""]+)[""] - ([^"\n]+)/) || [];
+      return { text: text.trim(), reference: reference.trim() };
+    });
+  }
+
+  return result;
+}
+
 export const generateContent = async (
   context: string,
   contentType: ContentType,
   languageCode: string
 ): Promise<{ prayer?: string; verses?: { text: string; reference: string }[] }> => {
   console.log(`Generating content for context: ${context}, type: ${contentType}, language: ${languageCode}`);
-  
-  // In a production environment, this would be an actual API call to Google Gemini or similar AI
-  // const response = await fetch('your-api-endpoint', {
-  //   method: 'POST',
-  //   headers: { 'Content-Type': 'application/json' },
-  //   body: JSON.stringify({ context, contentType, language: languageCode })
-  // });
-  
-  // Simulate API delay
-  await new Promise(resolve => setTimeout(resolve, 2000));
-  
-  // Simulate different responses based on language and content type
-  let result: { prayer?: string; verses?: { text: string; reference: string }[] } = {};
-  
-  // Dummy content for demonstration
-  if (contentType === 'prayer' || contentType === 'both') {
+
+  try {
+    if (!GEMINI_API_KEY) {
+      throw new Error('VITE_GEMINI_API_KEY environment variable is not set');
+    }
+
+    const prompt = createPrompt(context, contentType, languageCode);
+    
+    const response = await fetch(`${API_URL}?key=${GEMINI_API_KEY}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        contents: [{
+          parts: [{
+            text: prompt
+          }]
+        }],
+        generationConfig: {
+          temperature: 0.7,
+          topK: 40,
+          topP: 0.95,
+          maxOutputTokens: 1024,
+        },
+        safetySettings: [
+          {
+            category: "HARM_CATEGORY_HATE_SPEECH",
+            threshold: "BLOCK_MEDIUM_AND_ABOVE"
+          },
+          {
+            category: "HARM_CATEGORY_SEXUALLY_EXPLICIT",
+            threshold: "BLOCK_MEDIUM_AND_ABOVE"
+          },
+          {
+            category: "HARM_CATEGORY_HARASSMENT",
+            threshold: "BLOCK_MEDIUM_AND_ABOVE"
+          },
+          {
+            category: "HARM_CATEGORY_DANGEROUS_CONTENT",
+            threshold: "BLOCK_MEDIUM_AND_ABOVE"
+          }
+        ]
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error(`API request failed: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    return await parseGeminiResponse(data, contentType);
+
+  } catch (error) {
+    console.error('Error generating content:', error);
+    
+    // Return fallback content in case of error
     if (languageCode === 'pt') {
-      result.prayer = `Senhor, em momentos de ${context}, sei que posso encontrar refúgio em Ti. Dá-me a força para superar cada desafio, sabedoria para discernir o caminho certo e paz que transcende todo entendimento. Ajuda-me a lembrar que Tua graça é suficiente, e que em minha fraqueza, Teu poder se aperfeiçoa. Guia meus passos e ilumina meu caminho, para que eu possa glorificar Teu nome mesmo nas circunstâncias mais difíceis. Em nome de Jesus, amém.`;
+      return {
+        prayer: `Senhor, pedimos sua orientação neste momento de ${context}. Por favor, nos ajude e nos fortaleça. Amém.`,
+        verses: [{ text: "O Senhor é o meu pastor; nada me faltará.", reference: "Salmos 23:1" }]
+      };
     } else if (languageCode === 'es') {
-      result.prayer = `Señor, en momentos de ${context}, sé que puedo encontrar refugio en Ti. Dame la fuerza para superar cada desafío, sabiduría para discernir el camino correcto y paz que trasciende todo entendimiento. Ayúdame a recordar que Tu gracia es suficiente, y que en mi debilidad, Tu poder se perfecciona. Guía mis pasos e ilumina mi camino, para que pueda glorificar Tu nombre incluso en las circunstancias más difíciles. En el nombre de Jesús, amén.`;
+      return {
+        prayer: `Señor, pedimos tu guía en este momento de ${context}. Por favor, ayúdanos y fortalécenos. Amén.`,
+        verses: [{ text: "El Señor es mi pastor; nada me faltará.", reference: "Salmos 23:1" }]
+      };
     } else {
-      result.prayer = `Lord, in moments of ${context}, I know I can find refuge in You. Give me the strength to overcome each challenge, wisdom to discern the right path, and peace that surpasses all understanding. Help me remember that Your grace is sufficient, and that in my weakness, Your power is made perfect. Guide my steps and illuminate my path, so that I may glorify Your name even in the most difficult circumstances. In Jesus' name, amen.`;
+      return {
+        prayer: `Lord, we ask for your guidance in this moment of ${context}. Please help us and strengthen us. Amen.`,
+        verses: [{ text: "The Lord is my shepherd; I shall not want.", reference: "Psalm 23:1" }]
+      };
     }
   }
-  
-  if (contentType === 'verses' || contentType === 'both') {
-    if (languageCode === 'pt') {
-      result.verses = [
-        { text: "Não temas, porque eu sou contigo; não te assombres, porque eu sou o teu Deus; eu te fortaleço, e te ajudo, e te sustento com a minha destra fiel.", reference: "Isaías 41:10" },
-        { text: "Lançando sobre ele toda a vossa ansiedade, porque ele tem cuidado de vós.", reference: "1 Pedro 5:7" },
-        { text: "Em paz me deitarei e dormirei, porque só tu, Senhor, me fazes habitar em segurança.", reference: "Salmos 4:8" }
-      ];
-    } else if (languageCode === 'es') {
-      result.verses = [
-        { text: "No temas, porque yo estoy contigo; no desmayes, porque yo soy tu Dios que te fortalezco; siempre te ayudaré, siempre te sustentaré con la diestra de mi justicia.", reference: "Isaías 41:10" },
-        { text: "Echando toda vuestra ansiedad sobre él, porque él tiene cuidado de vosotros.", reference: "1 Pedro 5:7" },
-        { text: "En paz me acostaré y asimismo dormiré, porque solo tú, Jehová, me haces vivir confiado.", reference: "Salmos 4:8" }
-      ];
-    } else {
-      result.verses = [
-        { text: "Fear not, for I am with you; be not dismayed, for I am your God; I will strengthen you, I will help you, I will uphold you with my righteous right hand.", reference: "Isaiah 41:10" },
-        { text: "Casting all your anxieties on him, because he cares for you.", reference: "1 Peter 5:7" },
-        { text: "In peace I will both lie down and sleep; for you alone, O Lord, make me dwell in safety.", reference: "Psalm 4:8" }
-      ];
-    }
-  }
-  
-  return result;
 };
 
-// This function would be expanded to include translation functionality
-// For this implementation, we're assuming the AI service handles translation
+// Comentários para implementações futuras:
+
+/*
+IMPLEMENTAÇÃO PREMIUM:
+1. Para adicionar funcionalidades premium, você pode:
+   - Adicionar um parâmetro 'isPremium' na função generateContent
+   - Criar diferentes limites de versículos (3 para free, 5+ para premium)
+   - Adicionar opções especiais de conteúdo (por exemplo, devocionais)
+   Exemplo:
+   ```
+   if (isPremium) {
+     // Gerar conteúdo premium com mais versículos
+     // Adicionar conteúdo devocional
+     // Permitir personalização avançada
+   }
+   ```
+
+ADICIONAR NOVOS CONTEXTOS:
+1. Os contextos são gerenciados no arquivo i18n.ts
+2. Para adicionar novos contextos, basta expandir o array de opções lá
+3. O sistema de prompts já está preparado para lidar com qualquer contexto
+
+LOGS PARA DEBUGGING:
+1. Logs importantes já estão implementados para:
+   - Início da geração de conteúdo
+   - Erros na API
+   - Respostas da API
+2. Para adicionar mais logs, você pode:
+   - Monitorar tempo de resposta
+   - Registrar escolhas do usuário
+   - Rastrear falhas específicas
+*/
+
